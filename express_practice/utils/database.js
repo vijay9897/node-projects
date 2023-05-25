@@ -15,7 +15,8 @@ let _db;
 
 const mongoConnect = (callback) => {
     MongoClient
-    .connect('mongodb+srv://admin:admin@cluster0.rodbnjy.mongodb.net/?retryWrites=true&w=majority')
+    // .connect('mongodb+srv://admin:admin@cluster0.rodbnjy.mongodb.net/?retryWrites=true&w=majority')
+    .connect('mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.9.0')
     .then(client => {
         console.log('Connected');
         _db = client.db('shopping_db');
