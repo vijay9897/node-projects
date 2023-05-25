@@ -73,7 +73,6 @@ exports.addToCart = (req, res, next) => {
 exports.getOrder = (req, res, next) => {
     Order.find({"user.userId": req.user._id})
     .then(orders => {
-        console.log(orders);
         res.render(
             'shop/orders', {
                 path: '/orders',
