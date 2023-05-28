@@ -101,3 +101,7 @@ exports.getResetPassword = (req, res, next) => {
     errorMessage: message
   });
 };
+
+exports.postResetPassword = (req, res, next) => {
+  
+}
