@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 const bcrypt = require('bcryptjs');
 
 const User = require('../models/user');
@@ -103,5 +105,76 @@ exports.getResetPassword = (req, res, next) => {
 };
 
 exports.postResetPassword = (req, res, next) => {
-  
+  crypto.randomBytes(32, (err, buffer) => {
+    if (err) {
+      console.log(err);
+      return res.redirect('/reset-password');
+    }
+    const token = buffer.toString('hex');
+    User.findOne({email: req.body.email})
+    .then(user => {
+      if (!user) {
+        req.flash('error', 'No account with that email found.');
+        return res.redirect('/reset-password');
+      }
+      user.resetToken = token;
+      user.resetTokenExpiration = Date.now() + 3600000;
+      return user.save();
+    })
+    .then(result => {
+      res.redirect('/');
+      //send email to user
+    })
+    .catch(err => {
+      console.log(err);
+    });
+  });
+}
+
+exports.getUpdatePassword = (req, res, next) => {
+  const token = req.params.token;
+  User.findOne({resetToken: token, resetTokenExpiration: {$gt: Date.now()}})
+  .then(user => {
+    let message = req.flash('error');
+    if (message.length > 0) {
+      message = message[0];
+    } else {
+      message = null;
+    }
+    res.render('auth/new-password', {
+      path: '/update-password',
+      pageTitle: 'Change Password',
+      errorMessage: message,
+      userId: user._id.toString(),
+      token: token
+    })
+  })
+  .catch(err => {
+    console.log(err);
+  });
+}
+
+exports.postUpdatePassword = (req, res, next) => {
+  const newPassword = req.body.password;
+  const userId = req.body.userId;
+  const token = req.body.token
+  let resetUser;
+
+  User.findOne({resetToken: token, resetTokenExpiration: {$gt: Date.now()}, _id: userId})
+  .then(user => {
+    resetUser = user;
+    return bcrypt.hash(newPassword, 12);
+  })
+  .then(hash => {
+    resetUser.password = hash;
+    resetUser.resetToken = undefined;
+    resetUser.resetTokenExpiration = undefined;
+    return resetUser.save();
+  })
+  .then(result => {
+    res.redirect('/');
+  })
+  .catch(err => {
+    console.log(err);
+  });
 }
