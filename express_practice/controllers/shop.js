@@ -88,7 +88,6 @@ exports.getIndex = (req, res, next) => {
 }
 
 exports.getCart = (req, res, next) => {
-    console.log(req.user);
     req.user
     .populate('cart.items.productId')
     .then(cart => {
@@ -167,9 +166,27 @@ exports.postOrder = (req, res, next) => {
 }
 
 exports.getCheckout = (req, res, next) => {
-    res.render('shop/checkout', {
-        path: '/checkout',
-        pageTitle: 'checkout'
+    req.user
+    .populate('cart.items.productId')
+    .then(cart => {
+        const products = cart.cart.items;
+        let total = 0;
+        products.forEach(prod => {
+            total += prod.quantity * prod.productId.price;
+        });
+        res.render(
+            'shop/checkout', {
+                path: '/checkout',
+                pageTitle: 'Checkout',
+                products: products,
+                totalSum: total
+            }
+        );
+    })
+    .catch(err => {
+        const error = new Error(err);
+        error.httpStatusCode = 500;
+        return next(error);
     })
 }
 
