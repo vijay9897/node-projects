@@ -4,6 +4,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const { Server } = require("socket.io");
+const { createServer } = require("http");
 
 const feedRoutes = require('./routes/feed');
 const authRoutes = require('./routes/auth');
@@ -59,7 +61,13 @@ mongoose.connect(
     'mongodb://127.0.0.1:27017/posts_db'
 ).then(result => {
     console.log('Connect to database');
-    app.listen(8081);
+    // const server = createServer(app);
+    const server = app.listen(8081);
+    const io = require('./socket').init(server);
+    io.on('connection', socket => {
+        console.log('Client connected');
+    });
+    // server.listen(8081);
 }).catch(err => {
     console.log(err);
 });
